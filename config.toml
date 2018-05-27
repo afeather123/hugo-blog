@@ -1,0 +1,5 @@
+baseURL = "http://afeather123.github.io"
+languageCode = "en-us"
+title = "AFCode"
+theme = "capsule"
+disqusShortname = "https://afeather123-github-io"
