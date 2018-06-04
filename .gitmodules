@@ -4,3 +4,11 @@
 [submodule "themes/capsule"]
 	path = themes/capsule
 	url = https://github.com/sudorook/capsule
+[submodule "afeather123.github.io"]
+	path = afeather123.github.io
+	url = git@github.com:afeather123/afeather123.github.io.git
+	branch = master
+[submodule "public"]
+	path = public
+	url = git@github.com:afeather123/afeather123.github.io.git
+	branch = master
