@@ -1,0 +1,171 @@
+<script>
+    const storydata = {
+    variables: {
+        gender: ""
+    },
+    start: 'start',
+    nodes: {
+        start: {
+            text: `Hey guys how's it going, can we do multi-line comments with this?
+            Maybe we can. Ok this is good.`,
+            character: 'Professor Oak',
+            response: 'Please start telling the story',
+            next: "boy_or_girl"
+        },
+        boy_or_girl: {
+            text: `So are you a  boy or a girl?`,
+            choices: [
+            {
+                text: "Boy",
+                next: "boy",
+                set: [
+                    {
+                        var: 'gender',
+                        operator: '=',
+                        value: 'boy'
+                    }
+                ]
+            },
+            {
+                text: "Girl",
+                next: "girl",
+                set: [
+                    {
+                        var: 'gender',
+                        operator: '=',
+                        value: 'girl'
+                    }
+                ]
+
+            }] 
+        },
+        boy: {
+            text: "Oh! I thought you were a girl...",
+            response: 'What did you just say?',
+            next: 'introduction'
+        },
+        girl: {
+            text: 'Oh! I thought you were a boy...',
+            response: 'What did you just say?',
+            next: 'introduction'
+        },
+        introduction: {
+            text:   `Well, nice to meet you, little one.
+            I am profressor oak.`,
+            response: 'Please just give me my pokemon',
+            next: "interruption"
+        },
+        interruption: {
+            character: 'Random Guy',
+            text: `That's enough outta you, Doc.`,
+            response: 'Do you have my pokemon?',
+            next: 'nobut'
+        },
+        nobut: {
+            text: 'No but I do have this gun! Now empty your pockets and give me all you got! (What do you do!?!?!?!)',
+            choices: [
+                {
+                    text: 'Ey fuck this guy',
+                    next: 'badass',
+                    set: [
+                        {
+                            var: 'gun',
+                            operator: '=',
+                            value: true
+                        },
+                        {
+                            var: 'money',
+                            operator: '=',
+                            value: 10
+                        }
+                    ]
+                },
+                {
+                    text: 'Better do what he says',
+                    next: 'lame',
+                    set: [
+                        {
+                            var: 'gun',
+                            operator: '=',
+                            value: false
+                        },
+                        {
+                            var: 'money',
+                            operator: '=',
+                            value: 0
+                        }
+                    ]
+                }
+            ]
+        },
+        badass: {
+            character: "",
+            text: `Oh fuck this guy. You  jump right at him and sock it to him. You could tell just by looking this guy talked
+            a big game, but he could never actually do it. You know have a gun.`,
+            response: 'What a fool.',
+            next: 'whattodo'
+        },
+        lame: {
+            character: "",
+            text: `Better do what the man says... don't want anyone getting hurt... if only I had my pokemon right now!`,
+            response: 'Ok looks like he\'s gone...',
+            next: 'whattodo'
+        },
+        whattodo: {
+            text: `What should I do next?`,
+            choices:[
+                {
+                    text: 'Rob a bank',
+                    next: 'robABank',
+                    conditions: [
+                        {
+                            var: 'gun',
+                            operator: '=',
+                            value: true
+                        }
+                    ]
+                },
+                {
+                    text: 'Go to the store',
+                    next: 'goToStore'
+                }
+            ]
+        },
+        robABank: {
+            text: `The bank has been robbed! Hahahaha!`
+        },
+        goToStore: {
+            text: `Well I guess I'll go to the store.`,
+            response: `What to buy...`,
+            redirects: [
+                {
+                    next: 'noMoney',
+                    conditions: [
+                        {
+                            var: 'money',
+                            operator: '<=',
+                            value: 0
+                        }
+                    ]
+                },
+                {
+                    next: 'money',
+                    conditions: [
+                        {
+                            var: 'money',
+                            operator: '>',
+                            value: 0
+                        }
+                    ]
+                }
+            ]
+        },
+        noMoney: {
+            text: 'Oh crap, I have no money.'
+        },
+        money: {
+            text: 'Here we go! Let\'s go get the stuff'
+        }
+    }
+}
+</script>

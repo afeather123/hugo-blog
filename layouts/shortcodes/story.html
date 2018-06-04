@@ -1,0 +1,101 @@
+<div>
+    <div class="content">
+        <div class="box">
+            <strong id="characterName{{.Get 0}}"></strong>
+            <p id="text{{.Get 0}}"></p>
+            <div id="buttons{{.Get 0}}"></div>
+        </div>    
+    </div>
+    
+</div>
+
+<script type="text/javascript">
+    var Story;
+    if (Story !== undefined) {
+        console.log("Story is already defined");
+    } else {
+        import('/js/story.js')
+        .then(result => {
+            Story = result.Story;
+            MakeUIHandler();
+            function MakeUIHandler() {
+                const characterName = document.querySelector('#characterName{{.Get 0}}');
+                const buttons = document.querySelector('#buttons{{.Get 0}}');
+                const displayText = document.querySelector('#text{{.Get 0}}');
+                console.log('{{.Get 1}}')
+                fetch('{{.Get 1}}')
+                .then(function(response){
+                    return response.json();
+                })
+                .then(function(myJson) {
+
+                    let story = new Story(myJson);
+                    story.SubscribeData(data => {
+                        console.log(data);
+                        displayText.innerHTML = data.data.text;
+                        ClearNextButtons();
+                        if(data.redirect) {
+                            AddNextButton(data.data.response_text, data.redirect)
+                        }
+                        if(data.choices) {
+                            data.choices.forEach(choice => {
+                                AddChoiceButton(choice);
+                            })
+                        }
+                        if(!data.redirect && !data.choices) {
+                            AddResetButton();
+                        }
+                    })
+                    story.Start();
+
+                    function ClearNextButtons() {
+                        while (buttons.firstChild) {
+                            buttons.removeChild(buttons.firstChild);
+                        }
+                    }
+
+                    function AddChoiceButton(choice, callback) {
+                        let button = document.createElement('button');
+                        let innerText = document.createTextNode(choice.text);
+                        button.appendChild(innerText);
+                        button.classList.add('button');
+                        button.classList.add('is-small');
+                        button.addEventListener('click', event => {
+                            story.MakeChoice(choice);
+                            if(callback) callback();
+                        })
+                        buttons.appendChild(button);
+                    }
+                    
+                    function AddResetButton() {
+                        let button = document.createElement('button');
+                        let innerText = document.createTextNode('Reset');
+                        button.appendChild(innerText);
+                        button.classList.add('button');
+                        button.classList.add('is-small');
+                        button.addEventListener('click', event => {
+                            story.Reset();
+                            story.Start();
+                        })
+                        buttons.appendChild(button);
+                    }
+
+                    function AddNextButton(text,next, callback) {
+                        let button = document.createElement('button');
+                        let innerText = document.createTextNode(text);
+                        button.appendChild(innerText);
+                        button.classList.add('button');
+                        button.classList.add('is-small');
+                        button.addEventListener('click', event => {
+                            story.NextNode(next);
+                            if(callback) callback();
+                        })
+                        buttons.appendChild(button);
+                    }
+                });
+            }
+        })
+    }
+
+    
+</script>
