@@ -1,0 +1,63 @@
+{
+    "variables": {
+        "haveCar": true,
+        "gallonsOfGas": 15
+    },
+
+    "start": "giveMeARide",
+
+    "nodes": {
+        "giveMeARide": {
+            "data": {
+                "text": "Hey, do you think you could give me a ride? I live in Glendale.",
+                "response_text": "Oh..."
+            },
+            "redirects": [
+                {
+                    "node_name": "no_car",
+                    "conditions": [
+                        {
+                            "variable": "haveCar",
+                            "operator": "!=",
+                            "value": true
+                        }
+                    ]
+                },
+                {
+                    "node_name": "low_on_gas",
+                    "conditions": [
+                        {
+                            "variable": "haveCar",
+                            "operator": "=",
+                            "value": true
+                        },
+                        {
+                            "variable": "gallonsOfGas",
+                            "operator": "<=",
+                            "value": 2
+                        }
+                    ]
+                },
+                {
+                    "node_name": "yes"
+                }
+            ] 
+        },
+        "yes": {
+            "data": {
+                "text": "Sure! Why not?"
+            }
+        },
+        "no_car": {
+            "data": {
+                "text": "Sorry, I don't have a car."
+            }
+        },
+        "low_on_gas": {
+            "data": {
+                "text": "If you cover gas, sure. I'm pretty low and also pretty broke ¯\\_(ツ)_/¯"
+            }
+        }
+
+    }
+}

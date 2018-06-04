@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" itemscope itemtype="http://schema.org/Article">
+
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <title>Creating Interactive Dialogue in Javascript with JSON: Part 2</title>
+  <meta name="author" content="" />
+  <meta name="description"
+        content="In the last section, we got familiar with the problem and laid out what we&rsquo;re trying to do; we talked about text nodes and how they store the dialogue, and either information about how to..."/>
+
+
+  <meta name="generator" content="Hugo 0.40.3" />
+
+  
+  <meta itemprop="name" content="Creating Interactive Dialogue in Javascript with JSON: Part 2"/>
+  <meta itemprop="description"
+        content="In the last section, we got familiar with the problem and laid out what we&rsquo;re trying to do; we talked about text nodes and how they store the dialogue, and either information about how to..."/>
+  <meta itemprop="image"
+        content=""/>
+
+  
+  <meta property="og:title" content="Creating Interactive Dialogue in Javascript with JSON: Part 2"/>
+  <meta property="og:type"
+        content="article"/>
+  <meta property="og:url" content="http://afeather123.github.io/posts/creating-interactive-dialogue-w-json-part-two/"/>
+  <meta property="og:image"
+        content=""/>
+  <meta property="og:description"
+        content="In the last section, we got familiar with the problem and laid out what we&rsquo;re trying to do; we talked about text nodes and how they store the dialogue, and either information about how to..."/>
+  <meta property="og:site_name" content="AFCode"/>
+  <meta property="article:published_time"
+        content="2018-06-03T11:59:26-07:00"/>
+  <meta property="article:section" content="posts"/>
+
+  
+  
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:site"
+        content=""/>
+  <meta name="twitter:title" content="Creating Interactive Dialogue in Javascript with JSON: Part 2"/>
+  <meta name="twitter:description"
+        content="In the last section, we got familiar with the problem and laid out what we&rsquo;re trying to do; we talked about text nodes and how they store the dialogue, and either information about how to..."/>
+  <meta name="twitter:creator"
+        content=""/>
+  <meta name="twitter:image:src"
+        content=""/>
+
+  
+
+  
+  <link rel="stylesheet" type="text/css" href="/css/capsule.min.css"/>
+  
+  
+
+  
+  </head>
+
+
+  <body style="min-height:100vh;display:flex;flex-direction:column">
+
+    <nav class="navbar has-shadow is-white"
+     role="navigation" aria-label="main navigation">
+  <div class="container">
+
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <div class="title is-4">&nbsp;AFCode</div>
+      </a>
+
+      <a class="navbar-item pull-right" href="/about/">
+        About
+      </a>
+
+
+      
+      
+      <label class="button navbar-burger is-white" for="navbar-burger-state">
+        <span></span>                               
+        <span></span>
+        <span></span>
+      </label>
+    </div>
+
+    
+    <input type="checkbox" id="navbar-burger-state"/>
+
+    <div class="navbar-menu">
+      <div class="navbar-end">
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+
+    <section class="section" style="flex:1">
+
+      
+      <div class="container">
+        <p class="title">Creating Interactive Dialogue in Javascript with JSON: Part 2</p>
+        <p class="subtitle">Jun 3, 2018</p>
+
+        
+
+        
+        <div class="content">
+          <p>In the last section, we got familiar with the problem and laid out what we&rsquo;re trying to do; we talked about text nodes and how they store the dialogue, and either information about how to transition to the next node, or information about the choices to present the user with.</p>
+
+<p>Now, let&rsquo;s get into writing the code to work on that file. To start we are going to focus on writing the code that iterates over the file, and then we will create the GUI with buttons and text afterwards. Focusing on the logic without worrying about how we will display the output will help us to think about the core of the problem instead of getting caught up in the domain specific stuff; in this case we will be using DOM manipulation to make changes to the text and add buttons but in other cases we might want to do something completely different, like if we were using a <a href="https://github.com/collections/javascript-game-engines">javascript game engine or graphics rendering library</a>. By maintaining a <a href="https://en.wikipedia.org/wiki/Separation_of_concerns">seperation of concerns</a> between our code that handles iterating over the file and our code that handles displaying the information to the user, we will end up with something that is a lot more flexible and reusable for other projects in the future.</p>
+
+<p>Let&rsquo;s start by defining a Story class which will take the parsed JSON data as an argument for its constructor. We&rsquo;ll define a few methods on it; NextNode for when the node doesn&rsquo;t present multiple choices to the user, MakeChoice for when it does, and Subscribe, which is how our story class will communicate with other objects; another object will be able to pass in a callback function which will be called with the next nodes data as its parameter whenever NextNode or MakeChoice are called.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Story</span> {
+    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">story_data</span>) {
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">variables</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">story_data</span>.<span style="color:#a6e22e">variables</span>;
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">start</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">story_data</span>.<span style="color:#a6e22e">start</span>;
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">nodes</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">story_data</span>.<span style="color:#a6e22e">nodes</span>;
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">subscribers</span> <span style="color:#f92672">=</span> [];
+    }
+
+    <span style="color:#75715e">// Subscribe is how our story object will communicate with other parts of our program. You can pass in a callback
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// function into Subscribe, and that callback function will be called whenever NextNode is called to get the
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// Next part of our dialogue.
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">Subscribe</span>(<span style="color:#a6e22e">callback</span>) {
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">subscribers</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">callback</span>);
+    }
+
+    <span style="color:#75715e">// This function is used by NextNode to pass the new_node to all of the subscribers listening for information about it
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">NotifySubscribers</span>(<span style="color:#a6e22e">node_data</span>) {
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">subscribers</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">subscriber</span> =&gt; {
+            <span style="color:#a6e22e">subscriber</span>(<span style="color:#a6e22e">node_data</span>);
+        })
+    }
+
+    <span style="color:#a6e22e">NextNode</span>(<span style="color:#a6e22e">node_name</span>) {
+        <span style="color:#75715e">// This function will take in the name of the node, then check the conditions of that nodes redirects (if there are any)
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// To find the correct redirect, then 
+</span><span style="color:#75715e"></span>    }
+
+    <span style="color:#a6e22e">MakeChoice</span>(<span style="color:#a6e22e">choice</span>) {
+        <span style="color:#75715e">// This function will take in a choice object, then set the conditions in choice.set_conditions if they exist,
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// And call NextNode with the node_name of the choices redirect 
+</span><span style="color:#75715e"></span>    }
+
+    <span style="color:#a6e22e">Start</span>() {
+        <span style="color:#75715e">// This function will call next node with the starting node
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">NextNode</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">start</span>);
+    }
+}
+</code></pre></div>
+
+<p>Let&rsquo;s start off by getting the NextNode and Start functions working first. <a href="/json/testRedirects.json">Here&rsquo;s</a> the data I&rsquo;ll be using to test out our code. There are two variables, &ldquo;haveCar&rdquo; and &ldquo;carWorks&rdquo;. When asked &ldquo;Hey, do you think you could give me a ride?&rdquo;, if both are true, the response will be &ldquo;Sure, why not!&rdquo;; if we have a car but its not working, we will reply with &ldquo;Sorry, my cars not working right now.&rdquo;; finally, if &ldquo;haveCar&rdquo; is set to false we will reply with &ldquo;Sorry, I don&rsquo;t have a car.&rdquo; No choices yet; we&rsquo;ll have to test that its working by manually changing the variables in the file, but don&rsquo;t worry, we&rsquo;ll get there. <a href="https://github.com/afeather123/story_interpreter_redirect_exercise">Here&rsquo;s</a> a starter repository to use as a base. Even though this code will eventually run in the browser, for now I&rsquo;ll be testing it with node for conveniences sake.</p>
+
+<p>So NextNode has to take in the name of a node, and then return an object with the data of that node, if it has redirect(s), the first valid redirect of that node, and if it has choices, the choices of that node. Since there&rsquo;s nothing to simply returning the data and the choices, let&rsquo;s focus on finding a valid redirect to return it. The object that should be passed into the callback when &ldquo;haveCar&rdquo; and &ldquo;carWorks&rdquo; are true should look like:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript">{
+    <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> {
+        <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Hey, do you think you could give me a ride?&#34;</span>,
+        <span style="color:#a6e22e">response_text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Oh...&#34;</span>
+    },
+    <span style="color:#a6e22e">redirect</span><span style="color:#f92672">:</span> {
+        <span style="color:#e6db74">&#34;node_name&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;yes&#34;</span>,
+        <span style="color:#e6db74">&#34;conditions&#34;</span><span style="color:#f92672">:</span> [
+            {
+                <span style="color:#e6db74">&#34;variable&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;haveCar&#34;</span>,
+                <span style="color:#e6db74">&#34;operator&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;=&#34;</span>,
+                <span style="color:#e6db74">&#34;value&#34;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>
+            },
+            {
+                <span style="color:#e6db74">&#34;variable&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;carWorks&#34;</span>,
+                <span style="color:#e6db74">&#34;operator&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;=&#34;</span>,
+                <span style="color:#e6db74">&#34;value&#34;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>
+            }
+        ]
+    }
+}
+</code></pre></div>
+
+<p>Notice that we simply take the redirect and pass it in instead of only passing the node_name which, in this case, is the only piece of information necessary; the conditions are for internal use only and won&rsquo;t be used by the GUI. Though it might simplify things slightly in the short term to only pass back the node_name, passing the whole object will allow us to pass other data with it in the future if we decide to.</p>
+
+<p>I reccomend stopping here and trying it out yourself. I&rsquo;ve included a test file you can run to see if its NextNode passes the appropriate output to the listeners.</p>
+
+<p><br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br></p>
+
+<p>&hellip;Done? Ok, let&rsquo;s go over how I approached the problem. First we need a way to check if a condition is valid or not. I wrote a function that takes in a single condition and checks it based on its operator.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">CheckCondition</span>(<span style="color:#a6e22e">condition</span>) {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">variables</span>[<span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">variable</span>];
+    <span style="color:#66d9ef">switch</span>(<span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">operator</span>) {
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;=&#39;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;!=&#39;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;&lt;&#39;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;&gt;&#39;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;&lt;=&#39;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;&gt;=&#39;</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">condition</span>.<span style="color:#a6e22e">value</span>;
+            <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">default</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Invalid operator&#39;</span>);
+    }
+}
+</code></pre></div>
+
+<p>Technically to get the tests to work, you only needed to get the &lt;= operator working, by why not get all the other math operators working while we&rsquo;re at it, since they&rsquo;re all essentially the same? Since a redirect can have multiple conditions, we then need to write a function to check if a set of conditions is valid.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">CheckConditionSet</span>(<span style="color:#a6e22e">conditions</span>) {
+    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">conditions</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+        <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">CheckCondition</span>(<span style="color:#a6e22e">conditions</span>[<span style="color:#a6e22e">i</span>])) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+    }
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+}
+</code></pre></div>
+
+<p>Now we can write the function that returns the fist valid redirect.</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">GetValidRedirect</span>(<span style="color:#a6e22e">redirects</span>) {
+    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">redirects</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">redirects</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">conditions</span>) {
+            <span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">CheckConditionSet</span>(<span style="color:#a6e22e">redirects</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">conditions</span>)) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">redirects</span>[<span style="color:#a6e22e">i</span>];
+        } <span style="color:#66d9ef">else</span> {
+            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">redirects</span>[<span style="color:#a6e22e">i</span>];
+        }
+    }
+    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;No valid redirects found.&#34;</span>)
+}
+</code></pre></div>
+
+<p>Checking if the object has conditions allows for a default case that can be placed at the end, which can save some typing. Finally, let&rsquo;s write NextNode itself:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">NextNode</span>(<span style="color:#a6e22e">node_name</span>) {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">nodes</span>[<span style="color:#a6e22e">node_name</span>];
+    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">node</span>) {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;Invalid node name&#34;</span>);
+        <span style="color:#66d9ef">return</span>;
+    }
+    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">outputNode</span> <span style="color:#f92672">=</span> {};
+    <span style="color:#a6e22e">outputNode</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">data</span>;
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">redirects</span>) {
+        <span style="color:#a6e22e">outputNode</span>.<span style="color:#a6e22e">redirect</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">GetValidRedirect</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">redirects</span>);
+    }
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">choices</span>) {
+        <span style="color:#a6e22e">outputNode</span>.<span style="color:#a6e22e">choices</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">choices</span>;
+    }
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">NotifySubscribers</span>(<span style="color:#a6e22e">outputNode</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">outputNode</span>;
+}
+</code></pre></div>
+
+<p>And that&rsquo;s it! The functions we wrote do most of the heavy lifting; all that&rsquo;s left to do is construct out output object and pass it to the subscribers. It&rsquo;s definitely also possible to take all of these functions and throw them into NextNode with nested for loops, but I think breaking it into multiple functions makes it look much more readable, and will allow us to re-use some of these functions as we extend the functionality of our program (which we will!). Our story is now techincally dynamic, changing with the variables of the inital state; but since there&rsquo;s no way to change variables with user input, there&rsquo;s no way they&rsquo;d ever know. In the next section, we&rsquo;ll be adding choices.</p>
+
+        </div>
+
+        
+
+        
+
+      </div>
+
+    </section>
+
+    <section class="section">
+      
+      <div class="container">
+  <div class="level">
+
+    <div class="level-left">
+      <div class="level-item">
+        <p class="control has-addons">
+          <a class="button" href="#" disabled>
+            <span class="icon is-small"><i class="fa fa-chevron-left"></i></span>
+            <span>Newest</span>
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <div class="level-right">
+      <div class="level-item">
+        <p class="control has-addons">
+          <a class="button" href="http://afeather123.github.io/posts/creating-interactive-dialogue-w-json-intro/">
+            <span class="is-hidden-touch is-hidden-desktop-only">
+              Creating Interactive Dialogue in Javascript with JSON: Part 1
+            </span>
+            <span class="is-hidden-touch is-hidden-widescreen">
+              Creating Interactive Dialogue in Javascript with JSON: Part 1
+            </span>
+            <span class="is-hidden-mobile is-hidden-desktop">
+              Creating Interactive Dialogue in Javascript with...
+            </span>
+            <span class="is-hidden-tablet">
+              Creating Interactive Dialogue in...
+            </span>
+            
+            <span class="icon is-small"><i class="fa fa-chevron-right"></i></span>
+          </a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+      <br>
+      
+      <div class="container">
+  <div class="is-flex">
+    <span>
+      <a class="button">Share</a>
+    </span>
+
+    &nbsp;
+
+    <span>
+      
+      <a class="button"
+         href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f">
+        <span class="icon"><i class="fa fa-facebook"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://twitter.com/intent/tweet?url=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f&text=Creating%20Interactive%20Dialogue%20in%20Javascript%20with%20JSON%3a%20Part%202">
+        <span class="icon"><i class="fa fa-twitter"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://news.ycombinator.com/submitlink?u=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f">
+        <span class="icon"><i class="fa fa-hacker-news"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://reddit.com/submit?url=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f&title=Creating%20Interactive%20Dialogue%20in%20Javascript%20with%20JSON%3a%20Part%202">
+        <span class="icon"><i class="fa fa-reddit"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://plus.google.com/share?url=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f">
+        <span class="icon"><i class="fa fa-google-plus"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://www.linkedin.com/shareArticle?url=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f&title=Creating%20Interactive%20Dialogue%20in%20Javascript%20with%20JSON%3a%20Part%202">
+        <span class="icon"><i class="fa fa-linkedin"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://www.tumblr.com/widgets/share/tool?canonicalUrl=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f&title=Creating%20Interactive%20Dialogue%20in%20Javascript%20with%20JSON%3a%20Part%202&caption=">
+        <span class="icon"><i class="fa fa-tumblr"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://pinterest.com/pin/create/bookmarklet/?media=&url=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f&description=Creating%20Interactive%20Dialogue%20in%20Javascript%20with%20JSON%3a%20Part%202">
+        <span class="icon"><i class="fa fa-pinterest"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="whatsapp://send?text=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f">
+        <span class="icon"><i class="fa fa-whatsapp"></i></span>
+      </a>
+
+      
+      <a class="button"
+         href="https://web.skype.com/share?url=http%3a%2f%2fafeather123.github.io%2fposts%2fcreating-interactive-dialogue-w-json-part-two%2f">
+        <span class="icon"><i class="fa fa-skype"></i></span>
+      </a>
+
+      
+      
+      
+      
+      
+
+      
+      
+      
+      
+      
+    </span>
+  </div>
+</div>
+
+
+      <br>
+
+      
+      
+
+
+      <br>
+
+      <div class="container">
+        <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "afeather123-github-io" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+      </div>
+    </section>
+    
+
+    <footer class="footer">
+  <div class="container">
+    <nav class="level">
+
+      <div class="level-item has-text-centered">
+        <a href="/posts/" class="heading">
+          <span class="header">Posts</span>
+        </a>
+      </div>
+
+    </nav>
+
+    <nav class="level">
+
+      <div class="level-left has-text-centered">
+        <div class="level-item">
+          <form class="control has-icon has-icon-right" method="get"
+                action="https://duckduckgo.com">
+            <input class="input" type="text" name="q" maxlength="255"
+                   placeholder="Search">
+            <input class="input" type="hidden" name="sites" value="http://afeather123.github.io">
+            <span class="icon is-small"><i class="fa fa-search"></i></span>
+          </form>
+        </div>
+      </div>
+
+      <div class="level-right has-text-centered">
+        <div class="level-item">
+
+          <a class="button" href="http://afeather123.github.io">
+            <span class="icon"><i class="fa fa-home"></i></span>
+          </a> &nbsp;
+
+          
+
+          <a class="button" href="http://afeather123.github.io/index.xml">
+            <span class="icon"><i class="fa fa-rss"></i></span>
+          </a>
+
+        </div>
+      </div>
+
+    </nav>
+  </div>
+</footer>
+
+  </body>
+
+</html>
