@@ -1,35 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Posts on AFCode</title>
-    <link>http://afeather123.github.io/posts/</link>
-    <description>Recent content in Posts on AFCode</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    <lastBuildDate>Sun, 03 Jun 2018 11:59:26 -0700</lastBuildDate>
-    
-	<atom:link href="http://afeather123.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
-    
-    
-    <item>
-      <title>Creating Interactive Dialogue in Javascript with JSON: Part 2</title>
-      <link>http://afeather123.github.io/posts/creating-interactive-dialogue-w-json-part-two/</link>
-      <pubDate>Sun, 03 Jun 2018 11:59:26 -0700</pubDate>
-      
-      <guid>http://afeather123.github.io/posts/creating-interactive-dialogue-w-json-part-two/</guid>
-      <description>In the last section, we got familiar with the problem and laid out what we&amp;rsquo;re trying to do; we talked about text nodes and how they store the dialogue, and either information about how to transition to the next node, or information about the choices to present the user with.
-Now, let&amp;rsquo;s get into writing the code to work on that file. To start we are going to focus on writing the code that iterates over the file, and then we will create the GUI with buttons and text afterwards.</description>
-    </item>
-    
-    <item>
-      <title>Creating Interactive Dialogue in Javascript with JSON: Part 1</title>
-      <link>http://afeather123.github.io/posts/creating-interactive-dialogue-w-json-intro/</link>
-      <pubDate>Sat, 02 Jun 2018 20:41:13 -0700</pubDate>
-      
-      <guid>http://afeather123.github.io/posts/creating-interactive-dialogue-w-json-intro/</guid>
-      <description>In this series I&amp;rsquo;m going to go over creating a Javascript program that iterates over JSON to tell an interactive story. Here&amp;rsquo;s an example:
- var Story;if (Story !== undefined) {console.log(&#34;Story is already defined&#34;);} else {import(&#39;/js/story.js&#39;).then(result = {Story = result.Story;MakeUIHandler();function MakeUIHandler() {const characterName = document.querySelector(&#39;#characterName1&#39;);const buttons = document.querySelector(&#39;#buttons1&#39;);const displayText = document.querySelector(&#39;#text1&#39;);console.log(&#39;\/json\/introToDialogue.json&#39;)fetch(&#39;\/json\/introToDialogue.json&#39;).</description>
-    </item>
-    
-  </channel>
-</rss>
